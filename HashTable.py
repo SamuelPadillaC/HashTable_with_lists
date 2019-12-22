@@ -5,56 +5,72 @@
 ##############################
 import sys
 
-class HashTable:
-    # Initialize the table with a fixed size of 54 slots
-    def __init__(self):
-        self.Table = [None] * 54
+#* Implementing feedback.
+#! Feedback stuff is on red
 
-    def _get_value(self, key): #This is my hash function.
-        # It finds the hash of every string. total % 54
-        total = hash(key)
-        return total % 54
+class HashTable:
+    #! Hard coded size better implemented as a class constant
+    T_SIZE = 54
+    
+    # Initialize the table
+    def __init__(self):
+        #! Encapsulate the crucial table as a protected property
+        self._Table = [None] * HashTable.T_SIZE
+
+    #! Create a _check_value() method to avoid repetitive calls and condition check
+    #! Specifically avoid _get_value() call and if self._Table[val] == None check
+    #! _get_value() was unnecessarily long. Coded it in one line below
+    def _check_value(self, key):
+        val = hash(key) % HashTable.T_SIZE #This is the hash function.
+        is_empty = self._Table[val] is None
+        return val, is_empty
 
     def insert(self, key):
-        val = self._get_value(key)
+        val, is_empty = self._check_value(key)
         col = False #Collision bool
         index = 0
         
-        if self.Table[val] == None: #Empty slot - turn into list of keys to avoid extra cases
-            self.Table[val] = [key]
+        if is_empty: #Empty slot - turn into list of keys to avoid extra cases
+            self._Table[val] = [key]
 
         else: #Collision - append
-            self.Table[val].append(key)
+            self._Table[val].append(key)
             col = True
-            index = len(self.Table[val]) - 1
+            index = len(self._Table[val]) - 1
 
         return val, col, index
 
     def delete(self, key):
-        val = self._get_value(key)
+        val, is_empty = self._check_value(key)
 
-        if self.Table[val] == None: #Deleting an unexisting element
+        #! It makes no sense to implement a if/else statement if the first branch of
+        #!the if returns immediately.
+        if is_empty: #Deleting an unexisting element
             return -1, 0
 
-        elif key in self.Table[val]: #This is the O(n) part of the hashtable
-            index = self.Table[val].index(key)
-            self.Table[val].remove(key)
+        #! Implement a try/except to avoid doing two lookups
+        #! The avoided lookups are <if key in self._Table[val]> and <index = self._Table[val].index(key)>
+        try:
+            index = self._Table[val].index(key) #This is the O(n) part of the hashtable
+            self._Table[val].remove(key)
             return val, index
-
-        else: # No match was found in list, element does not exist
+        except ValueError: # No match was found in list, element does not exist
             return -1, 0
     
     def lookup(self, key):
-        val = self._get_value(key)
+        val, is_empty = self._check_value(key)
 
-        if self.Table[val] == None:
+        #! It makes no sense to implement a if/else statement if the first branch of
+        #!the if returns immediately.
+        if is_empty:
             return -1, 0
-        else:
-            if key in self.Table[val]:
-                index = self.Table[val].index(key)
-                return val, index
-
-            # No match was found in list, element does not exist
+        
+        #! Implement a try/except to avoid doing two lookups
+        #! The avoided lookups are <if key in self._Table[val]> and <index = self._Table[val].index(key)>
+        try:
+            index = self._Table[val].index(key)
+            return val, index
+        except ValueError: # No match was found in list, element does not exist
             return -1, 0
 
     def clear(self):
@@ -122,7 +138,7 @@ def main ():
             print ("Table cleared")
 
         # Print Table
-        print ("\n\nThe full table is:\n", Table.Table)
+        print ("\n\nThe full table is:\n", Table._Table)
 
         # Prompt for next iteration
         print ("\n\n\n----------------------------------------------------------------------------------------------",
@@ -138,6 +154,7 @@ def main ():
 
     print ("\n\nProgram terminated\nPeace out!")
 
+##########################
 ##########################
 if __name__ == "__main__":
     main ()
